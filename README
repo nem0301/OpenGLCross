@@ -1,0 +1,11 @@
+GLM:
+glm just need header file
+cp glm to include directory 
+
+
+GLFW 3.2.1:
+cmake -DCMAKE_TOOLCHAIN_FILE=CMake/x86_64-w64-mingw32.cmake .
+make -j4
+change cmake_install.cmake file's prefix 
+sudo make install
+
