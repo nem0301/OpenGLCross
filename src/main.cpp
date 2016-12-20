@@ -1,13 +1,15 @@
-#include <iostream>
-#include <glm/glm.hpp>
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "Ipc.h"
 #include "Common.h"
+#include "Shader.h"
 
 using namespace std;
 using namespace glm;
+
 
 int main(int argc, char *argv[])
 {
@@ -39,6 +41,8 @@ int main(int argc, char *argv[])
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 
+	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+
 	GLuint vertexArrayId;
 	glGenVertexArrays(1, &vertexArrayId);
 	glBindVertexArray(vertexArrayId);
@@ -57,8 +61,26 @@ int main(int argc, char *argv[])
 	glBufferData(GL_ARRAY_BUFFER, sizeof(gVertexBufferData),
 		gVertexBufferData, GL_STATIC_DRAW);
 	
+	GLuint programID = Shader::loadShaders( "SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader" );
+
+	GLuint matrixID = glGetUniformLocation(programID, "MVP");
+	mat4 proj = perspective(45.0f, 4.0f/3.0f, 0.1f, 100.f);
+
+	mat4 view = lookAt(
+			vec3(4, 3, 3), // camera
+			vec3(0, 0, 0), // look at
+			vec3(0, 1, 0) // head is up
+			);
+
+	mat4 model = mat4(1.0f);
+	mat4 mvp = proj * view * model;
 
 	do{
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glUseProgram(programID);
+
+		glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
+
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 		glVertexAttribPointer(
@@ -71,9 +93,7 @@ int main(int argc, char *argv[])
 				);
 
 		glDrawArrays(GL_TRIANGLES, 0, 3);
-
 		glDisableVertexAttribArray(0);
-
 
 		// Swap buffers
 		glfwSwapBuffers(window);

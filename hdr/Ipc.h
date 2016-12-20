@@ -1,5 +1,6 @@
 #pragma once
 #include <winsock2.h>
+#include "Common.h"
 
 #define	IPC_MAX_SIZE 4096
 
