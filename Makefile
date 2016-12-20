@@ -20,8 +20,8 @@ all : $(APP_NAME)
 $(APP_NAME) : $(OBJS)
 	$(LD) -o $@ $^ $(LIBS) 
 
-$(OBJS): $(SRCS)
-	$(CXX) $(CLFAGS) -MMD -o $@ -c $<
+$(OBJS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp $(HDR_DIR)/*.h
+	$(CXX) $(CLFAGS) $(INCLUDES)  -MMD -o $@ -c $<
 
 
 .PHONY : clean
