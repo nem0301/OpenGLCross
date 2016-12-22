@@ -1,5 +1,4 @@
-#include "Common.h"
-
+#include "Common.h" 
 using namespace std;
 
 class Texture
@@ -13,7 +12,7 @@ public:
 	{
 	}
 
-	GLuint loadBmp(string path)
+	static GLuint loadBmp(string path)
 	{
 		const char* cPath = path.c_str();
 		unsigned int header[54];
@@ -57,8 +56,19 @@ public:
 
 		data = new unsigned char [imageSize];
 
-		fread(data, 1, imageSize);
+		fread(data, 1, imageSize, fp);
 
 		fclose(fp);
+
+		GLuint textureID;
+		
+		glGenTextures(1, &textureID);
+		glBindTexture(GL_TEXTURE_2D, textureID);
+
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+		return textureID;
 	}
 };
