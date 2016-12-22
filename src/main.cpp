@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 	// mvp
 	mat4 mvp = proj * view * model;
 
-	GLuint Texture = Texture::loadBmp("./res/_uvtemplate.bmp");
+	GLuint Texture = Texture::loadBmp("./res/uvtemplate.DDS");
 
 	GLuint TextureID  = glGetUniformLocation(programID, "myTextureSampler");
 
