@@ -22,14 +22,14 @@ public:
 		unsigned int imageSize;
 		unsigned char *data;
 
-		File* fp = fopen(cPath, "rb");
+		FILE* fp = fopen(cPath, "rb");
 		if ( !fp ) 
 		{
 			cout << "image could not opened" << endl;
 			return -1;
 		}
 
-		if ( fread(header, 1, 54, file) != 54)
+		if ( fread(header, 1, 54, fp) != 54)
 		{
 			cout << "not correct BMP file" << endl;
 			return -2;
@@ -40,16 +40,25 @@ public:
 			cout << "not correct BMP file " << header[0] << ", " <<  header[1] <<endl;
 		}
 
-		dataPos = *(int)&(header[0x0A]);
-		imageSize = *(int)&(header[0x0A]);
-		width = *(int)&(header[0x0A]);
-		height = *(int)&(header[0x0A]);
+		dataPos = *(int*)&(header[0x0A]);
+		imageSize = *(int*)&(header[0x0A]);
+		width = *(int*)&(header[0x0A]);
+		height = *(int*)&(header[0x0A]);
 
 		if ( imageSize == 0 )
 		{
 			imageSize = width * height * 3;
 		}
-	
-	}
 
+		if ( dataPos == 0 )
+		{
+			dataPos = 54;
+		}
+
+		data = new unsigned char [imageSize];
+
+		fread(data, 1, imageSize);
+
+		fclose(fp);
+	}
 };
