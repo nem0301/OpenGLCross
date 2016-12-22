@@ -3,3 +3,4 @@
 *.d
 ctags
 *.exe
+tutorial/*
