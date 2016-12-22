@@ -19,6 +19,7 @@ DEPS = $(OBJS:%.o=%.d)
 
 all : $(TARGET)
 	cp ./shader/* ./tgt
+	cp -r ./res ./tgt
 
 $(TARGET) : $(OBJS)
 	$(LD) -o $@ $^ $(LIBS) 
