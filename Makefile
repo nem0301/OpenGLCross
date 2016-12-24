@@ -30,6 +30,6 @@ $(OBJS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp
 
 .PHONY : clean
 clean :
-	@rm $(TGT_DIR)/* $(OBJ_DIR)/*.o $(OBJ_DIR)/*.d 
+	@rm -rf $(TGT_DIR)/* $(OBJ_DIR)/*.o $(OBJ_DIR)/*.d 
 
 -include $(DEPS)
