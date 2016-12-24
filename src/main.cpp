@@ -3,6 +3,7 @@
 #include "Shader.h"
 #include "Ipc.h"
 #include "Texture.h"
+#include "Control.h"
 
 using namespace std;
 using namespace glm;
@@ -57,21 +58,6 @@ int main(int argc, char *argv[])
 	GLuint programID = Shader::loadShaders( "vertexShader.vert", "fragmentShader.frag" );
 
 	GLuint matrixID = glGetUniformLocation(programID, "MVP");
-	// projection
-	mat4 proj = perspective(45.0f, 4.0f/3.0f, 0.1f, 100.f);
-
-	// look at
-	mat4 view = lookAt(
-			vec3(4, 3, -3), // camera
-			vec3(0, 0, 0), // look at
-			vec3(0, 1, 0) // head is up
-			);
-
-	// model;
-	mat4 model = mat4(1.0f);
-
-	// mvp
-	mat4 mvp = proj * view * model;
 
 	GLuint Texture = Texture::loadDds("./res/uvtemplate.DDS");
 
@@ -174,6 +160,12 @@ int main(int argc, char *argv[])
 
 		// use shader
 		glUseProgram(programID);
+
+		Control::computeMVPByInputs();
+		mat4 proj = Control::getProjMatrix();
+		mat4 view = Control::getViewMatrix();
+		mat4 model = mat4(1.0f);
+		mat4 mvp = proj * view * model;
 
 		// mvp uniform
 		glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
