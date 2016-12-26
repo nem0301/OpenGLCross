@@ -45,9 +45,11 @@ int main(int argc, char *argv[])
 
 	// enable depth test
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
 
 	// accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
+
 
 	//vertext Array
 	GLuint vertexArrayID;
@@ -155,15 +157,18 @@ int main(int argc, char *argv[])
 		gUvBufferData, GL_STATIC_DRAW);
 
 
+	Control* mainControl = new Control(window, vec3(0, 0, 5), 3.14f, 0.0f, 45.0f, 3.0f, 0.005f);
+
 	do{
+		float curTime = glfwGetTime();
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		// use shader
 		glUseProgram(programID);
 
-		Control::computeMVPByInputs();
-		mat4 proj = Control::getProjMatrix();
-		mat4 view = Control::getViewMatrix();
+		mainControl->computeMVPByInputs(curTime);
+		mat4 proj = mainControl->getProjMatrix();
+		mat4 view = mainControl->getViewMatrix();
 		mat4 model = mat4(1.0f);
 		mat4 mvp = proj * view * model;
 
