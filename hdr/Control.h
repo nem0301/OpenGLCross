@@ -36,7 +36,7 @@ public:
 	void computeMVPByInputs(float curTime)
 	{
 		static float lastTime = glfwGetTime();
-		float deltaTime = curTime - lastTime;
+		float deltaTime = (curTime - lastTime);
 		lastTime = curTime;
 
 		double xpos, ypos;
@@ -44,8 +44,8 @@ public:
 		
 		glfwSetCursorPos(window, mx, my);
 
-		horizontalAngle += mouseSpeed * deltaTime * (mx - xpos);
-		verticalAngle += mouseSpeed * deltaTime * (my - ypos);
+		horizontalAngle += mouseSpeed * deltaTime * (mx - xpos) * 2;
+		verticalAngle += mouseSpeed * deltaTime * (my - ypos) * 2;
 
 		vec3 direction(
 			cos(verticalAngle) * sin(horizontalAngle),
@@ -81,6 +81,16 @@ public:
 			position -= right * deltaTime * speed;
 		}
 
+		if ( glfwGetKey(window, GLFW_KEY_SPACE ) == GLFW_PRESS )
+		{
+			position += vec3(0.0f, 1.0f, 0.0f) * deltaTime * speed;
+		}
+		else if ( position[1] > 0 )
+		{
+			position -= vec3(0.0f, 1.0f, 0.0f) * deltaTime * speed * 0.2f;
+		}
+
+
 		proj = perspective(fov, 4.0f/3.0f, 0.1f, 100.f);
 		view = lookAt(
 			position,
@@ -92,14 +102,12 @@ public:
 
 	mat4 getProjMatrix()
 	{
-		mat4 ret;
-		return ret;
+		return proj;
 	}
 
 	mat4 getViewMatrix()
 	{
-		mat4 ret;
-		return ret;
+		return view;
 	}
 
 };
