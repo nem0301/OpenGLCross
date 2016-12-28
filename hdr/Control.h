@@ -7,6 +7,8 @@ using namespace glm;
 class Control
 {
 	GLFWwindow* window;
+	int width;
+	int height;
 	vec3 position;
 	float horizontalAngle;
 	float verticalAngle;
@@ -20,17 +22,19 @@ class Control
 	
 	
 public:
-	Control (GLFWwindow* window, vec3 pos, float hAngle, float vAngle, float fov, float speed, float mouseSpeed)
+	Control (GLFWwindow* window, int width, int height, vec3 pos, float hAngle, float vAngle, float fov, float speed, float mouseSpeed)
 	{
 		this->window = window;
+		this->width = width;
+		this->height = height;
 		this->position = pos;
 		this->horizontalAngle = hAngle;
 		this->verticalAngle = vAngle;
 		this->fov = fov;
 		this->speed = speed;
 		this->mouseSpeed = mouseSpeed;
-		this->mx = 1024/2;
-		this->my = 768/2;
+		this->mx = width/2;
+		this->my = height/2;
 	}
 	
 	void computeMVPByInputs(float curTime)
@@ -44,8 +48,8 @@ public:
 		
 		glfwSetCursorPos(window, mx, my);
 
-		horizontalAngle += mouseSpeed * deltaTime * (mx - xpos) * 2;
-		verticalAngle += mouseSpeed * deltaTime * (my - ypos) * 2;
+		horizontalAngle += mouseSpeed * deltaTime * (mx - xpos) * 8;
+		verticalAngle += mouseSpeed * deltaTime * (my - ypos) * 8;
 
 		vec3 direction(
 			cos(verticalAngle) * sin(horizontalAngle),
@@ -91,7 +95,7 @@ public:
 		}
 
 
-		proj = perspective(fov, 4.0f/3.0f, 0.1f, 100.f);
+		proj = perspective(fov, (float)width/(float)height, 0.1f, 100.f);
 		view = lookAt(
 			position,
 			position+direction,

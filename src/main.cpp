@@ -23,8 +23,10 @@ int main(int argc, char *argv[])
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL
 
 	// Open a window and create its OpenGL context
+	int width = 2560;
+	int height = 1440;
 	GLFWwindow* window;
-	window = glfwCreateWindow( 1024, 768, "opengl", NULL, NULL);
+	window = glfwCreateWindow(width, height, "opengl", glfwGetPrimaryMonitor(), NULL);
 	if( window == NULL ){
 		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
 		glfwTerminate();
@@ -60,15 +62,17 @@ int main(int argc, char *argv[])
 	// load shader
 	GLuint programID = Shader::loadShaders( "vertexShader.vert", "fragmentShader.frag" );
 
-	GLuint matrixID = glGetUniformLocation(programID, "MVP");
+	GLuint mvpMatrixID = glGetUniformLocation(programID, "MVP");
+	GLuint viewMatrixID = glGetUniformLocation(programID, "V");
+	GLuint modelMatrixID = glGetUniformLocation(programID, "M");
 
 	GLuint Texture = Texture::loadDds("./res/uvtemplate.DDS");
 
 	GLuint TextureID  = glGetUniformLocation(programID, "myTextureSampler");
 
 
+	Control* mainControl = new Control(window, width, height, vec3(0, 0, 5), 3.14f, 0.0f, 45.0f, 3.0f, 0.005f);
 
-	Control* mainControl = new Control(window, vec3(0, 0, 5), 3.14f, 0.0f, 45.0f, 3.0f, 0.005f);
 	Model* model = new Model();
 	vector<vec3> vertices;
 	vector<vec2> uvs;
@@ -87,6 +91,14 @@ int main(int argc, char *argv[])
 	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(vec2),
 		&uvs[0], GL_STATIC_DRAW);
 
+	GLuint normalBuffer;
+	glGenBuffers(1, &normalBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(vec3),
+		&normals[0], GL_STATIC_DRAW);
+	
+	glUseProgram(programID);
+	GLuint lightID = glGetUniformLocation(programID, "lightPositionWorldSpace");
 
 	do{
 		float curTime = glfwGetTime();
@@ -102,7 +114,12 @@ int main(int argc, char *argv[])
 		mat4 mvp = proj * view * model;
 
 		// mvp uniform
-		glUniformMatrix4fv(matrixID, 1, GL_FALSE, &mvp[0][0]);
+		glUniformMatrix4fv(mvpMatrixID, 1, GL_FALSE, &mvp[0][0]);
+		glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, &view[0][0]);
+		glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, &model[0][0]);
+
+		vec3 lightPos = vec3(4, 4, 4);
+		glUniform3f(lightID, lightPos.x, lightPos.y, lightPos.z);
 
 		// Bind our texture in Texture Unit 0
 		glActiveTexture(GL_TEXTURE0);
@@ -122,7 +139,7 @@ int main(int argc, char *argv[])
 				(void*)0	// array buffer offset
 				);
 
-		// color buffer
+		// uv buffer
 		glEnableVertexAttribArray(1);
 		glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
 		glVertexAttribPointer(
@@ -134,12 +151,25 @@ int main(int argc, char *argv[])
 				(void*)0	// array buffer offset
 				);
 
+		// normal buffer
+		glEnableVertexAttribArray(2);
+		glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+		glVertexAttribPointer(
+				2,			// attribute 0. shader layout
+				3,			// size
+				GL_FLOAT,	// type
+				GL_FALSE,	// nomarlized?
+				0,			// stride
+				(void*)0	// array buffer offset
+				);
+
 		// draw
-		glDrawArrays(GL_TRIANGLES, 0, 12*3);
+		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 		
 		// disable
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
+		glDisableVertexAttribArray(2);
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -151,6 +181,7 @@ int main(int argc, char *argv[])
 
 	glDeleteBuffers(1, &vertexBuffer);
 	glDeleteBuffers(1, &uvBuffer);
+	glDeleteBuffers(1, &normalBuffer);
 	glDeleteProgram(programID);
 	glDeleteTextures(1, &TextureID);
 	glDeleteVertexArrays(1, &vertexArrayID);

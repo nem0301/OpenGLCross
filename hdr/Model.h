@@ -19,7 +19,7 @@ public:
 		vector<vec3> tmpNormals;
 
 		FILE* fp = fopen(path.c_str(), "r");
-		if ( fp != NULL )
+		if ( fp == NULL )
 		{
 			perror("fopen : ");
 			return;
@@ -54,15 +54,16 @@ public:
 			else if ( strcmp(lineHeader, "f") == 0 )
 			{
 				string vertex1, vertex2, vertex3;
-				unsigned int vertexIndex[3], uvIndex[2], normalIndex[3];
-				int matches = fscanf(fp , "%d/%d/%d %d/%d/%d/ %d/%d/%d\n",
+				unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+				int matches = fscanf(fp , "%d/%d/%d %d/%d/%d %d/%d/%d\n",
 						&vertexIndex[0], &uvIndex[0], &normalIndex[0],
 						&vertexIndex[1], &uvIndex[1], &normalIndex[1],
 						&vertexIndex[2], &uvIndex[2], &normalIndex[2]);
 				
 				if ( matches != 9 )
 				{
-					perror("f parsing : ");
+					perror("f parsing");
+					printf("%d\n", matches);
 					return;
 				}
 
