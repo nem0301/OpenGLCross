@@ -6,5 +6,5 @@ tags
 tutorial/*
 tgt/*
 *.swp
-./GL
-./GLFW
+./GL/*
+./GLFW/*
