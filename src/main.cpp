@@ -67,35 +67,18 @@ int main(int argc, char *argv[])
 	GLuint modelMatrixID = glGetUniformLocation(programID, "M");
 
 	GLuint Texture = Texture::loadDds("./res/uvtemplate.DDS");
+	GLuint Texture2 = Texture::loadDds("./res/uvmap.DDS");
 
 	GLuint TextureID  = glGetUniformLocation(programID, "myTextureSampler");
 
 
 	Control* mainControl = new Control(window, width, height, vec3(0, 0, 5), 3.14f, 0.0f, 45.0f, 3.0f, 0.005f);
 
-	Model* model = new Model();
-	vector<vec3> vertices;
-	vector<vec2> uvs;
-	vector<vec3> normals;
-	model->loadObj("./res/cube.obj", vertices, uvs, normals);
+	Model* cubeModel = new Model(vec3(4, 0, 0));
+	cubeModel->loadObj("./res/cube.obj");
 
-	GLuint vertexBuffer;
-	glGenBuffers(1, &vertexBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vec3),
-		&vertices[0], GL_STATIC_DRAW);
-
-	GLuint uvBuffer;
-	glGenBuffers(1, &uvBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
-	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(vec2),
-		&uvs[0], GL_STATIC_DRAW);
-
-	GLuint normalBuffer;
-	glGenBuffers(1, &normalBuffer);
-	glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
-	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(vec3),
-		&normals[0], GL_STATIC_DRAW);
+	Model* suzanneModel = new Model(vec3(6, 7, 6));
+	suzanneModel->loadObj("./res/suzanne.obj");
 	
 	glUseProgram(programID);
 	GLuint lightID = glGetUniformLocation(programID, "lightPositionWorldSpace");
@@ -129,9 +112,9 @@ int main(int argc, char *argv[])
 
 		// vertex buffer
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, cubeModel->getVertexBuffer());
 		glVertexAttribPointer(
-				0,			// attribute 0. shader layout
+				0,			// attribute 0. vertex
 				3,			// size
 				GL_FLOAT,	// type
 				GL_FALSE,	// nomarlized?
@@ -141,9 +124,9 @@ int main(int argc, char *argv[])
 
 		// uv buffer
 		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, cubeModel->getUvBuffer());
 		glVertexAttribPointer(
-				1,			// attribute 0. shader layout
+				1,			// attribute 1. uv
 				2,			// size
 				GL_FLOAT,	// type
 				GL_FALSE,	// nomarlized?
@@ -153,9 +136,9 @@ int main(int argc, char *argv[])
 
 		// normal buffer
 		glEnableVertexAttribArray(2);
-		glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, cubeModel->getNormalBuffer());
 		glVertexAttribPointer(
-				2,			// attribute 0. shader layout
+				2,			// attribute 2 normal
 				3,			// size
 				GL_FLOAT,	// type
 				GL_FALSE,	// nomarlized?
@@ -164,7 +147,50 @@ int main(int argc, char *argv[])
 				);
 
 		// draw
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+		glDrawArrays(GL_TRIANGLES, 0, cubeModel->getVertices().size());
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, Texture2);
+		// Set our "myTextureSampler" sampler to user Texture Unit 0
+		glUniform1i(TextureID, 0);
+
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, suzanneModel->getVertexBuffer());
+		glVertexAttribPointer(
+				0,			// attribute 0. vertex
+				3,			// size
+				GL_FLOAT,	// type
+				GL_FALSE,	// nomarlized?
+				0,			// stride
+				(void*)0	// array buffer offset
+				);
+
+		// uv buffer
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, suzanneModel->getUvBuffer());
+		glVertexAttribPointer(
+				1,			// attribute 1. uv
+				2,			// size
+				GL_FLOAT,	// type
+				GL_FALSE,	// nomarlized?
+				0,			// stride
+				(void*)0	// array buffer offset
+				);
+
+		// normal buffer
+		glEnableVertexAttribArray(2);
+		glBindBuffer(GL_ARRAY_BUFFER, suzanneModel->getNormalBuffer());
+		glVertexAttribPointer(
+				2,			// attribute 2 normal
+				3,			// size
+				GL_FLOAT,	// type
+				GL_FALSE,	// nomarlized?
+				0,			// stride
+				(void*)0	// array buffer offset
+				);
+
+		// draw
+		glDrawArrays(GL_TRIANGLES, 0, suzanneModel->getVertices().size());
 		
 		// disable
 		glDisableVertexAttribArray(0);
@@ -179,9 +205,6 @@ int main(int argc, char *argv[])
 	while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
 			glfwWindowShouldClose(window) == 0 );
 
-	glDeleteBuffers(1, &vertexBuffer);
-	glDeleteBuffers(1, &uvBuffer);
-	glDeleteBuffers(1, &normalBuffer);
 	glDeleteProgram(programID);
 	glDeleteTextures(1, &TextureID);
 	glDeleteVertexArrays(1, &vertexArrayID);

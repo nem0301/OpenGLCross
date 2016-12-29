@@ -3,15 +3,64 @@
 
 class Model
 {
+	vector<vec3> vertices;
+	vector<vec2> uvs;
+	vector<vec3> normals;
+
+	GLuint vertexBuffer;
+	GLuint uvBuffer;
+	GLuint normalBuffer;
+
+	vec3 position;
+	
 public:
-	Model()
+	Model(vec3 pos)
 	{
+		this->position = pos;
 	}
 
-	void loadObj (string path, 
-			vector<vec3>& outVertices,
-			vector<vec2>& outUvs,
-			vector<vec3>& outNormals)
+	~Model()
+	{
+		clearBufferData();
+		glDeleteBuffers(1, &vertexBuffer);
+		glDeleteBuffers(1, &uvBuffer);
+		glDeleteBuffers(1, &normalBuffer);
+	}
+
+	vector<vec3> getVertices()
+	{
+		return this->vertices;
+	}
+
+	vector<vec2> getUvs()
+	{
+		return this->uvs;
+	}
+
+	vector<vec3> getNormals()
+	{
+		return this->normals;
+	}
+
+	GLuint getVertexBuffer()
+	{
+		return this->vertexBuffer;
+	}
+
+	GLuint getUvBuffer()
+	{
+		return this->uvBuffer;
+	}
+
+	GLuint getNormalBuffer()
+	{
+		return this->normalBuffer;
+	}
+
+	void loadObj(string path) 
+//			vector<vec3>& outVertices,
+//			vector<vec2>& outUvs,
+//			vector<vec3>& outNormals)
 	{
 		vector<unsigned int> vertexIndices, uvIndices, normalIndices;
 		vector<vec3> tmpVertices;
@@ -79,24 +128,49 @@ public:
 			}
 		}
 
+		clearBufferData();
+
 		for (unsigned int i = 0; i < vertexIndices.size(); i++)
 		{
 			unsigned int vertexIndex = vertexIndices[i];
 			vec3 vertex = tmpVertices[vertexIndex-1];
-			outVertices.push_back(vertex);
+			vertex = vertex + this->position;
+			vertices.push_back(vertex);
 		}
 		for (unsigned int i = 0; i < uvIndices.size(); i++)
 		{
 			unsigned int uvIndex = uvIndices[i];
 			vec2 uv = tmpUvs[uvIndex-1];
-			outUvs.push_back(uv);
+			uvs.push_back(uv);
 		}
 		for (unsigned int i = 0; i < normalIndices.size(); i++)
 		{
 			unsigned int normalIndex = normalIndices[i];
 			vec3 normal = tmpNormals[normalIndex-1];
-			outNormals.push_back(normal);
+			normals.push_back(normal);
 		}
+
+		glGenBuffers(1, &vertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vec3),
+				&vertices[0], GL_STATIC_DRAW);
+
+		glGenBuffers(1, &uvBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+		glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(vec2),
+				&uvs[0], GL_STATIC_DRAW);
+
+		glGenBuffers(1, &normalBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+		glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(vec3),
+				&normals[0], GL_STATIC_DRAW);
+	}
+
+	void clearBufferData()
+	{
+		vertices.clear();
+		uvs.clear();
+		normals.clear();
 	}
 
 };

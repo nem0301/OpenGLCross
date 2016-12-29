@@ -1,8 +1,10 @@
 *.o
 *.a
 *.d
-ctags
+tags
 *.exe
 tutorial/*
 tgt/*
 *.swp
+./GL
+./GLFW
