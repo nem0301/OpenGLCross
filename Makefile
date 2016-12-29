@@ -18,6 +18,7 @@ OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 DEPS = $(OBJS:%.o=%.d)
 
 all : $(TARGET)
+	glslangValidator ./shader/*
 	cp ./shader/* ./tgt
 	cp -r ./res ./tgt
 

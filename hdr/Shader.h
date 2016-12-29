@@ -1,5 +1,7 @@
 #include "Common.h"
 
+using namespace std;
+
 class Shader
 {
 
@@ -15,10 +17,10 @@ public:
 		GLuint FragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
 
 		// Read the Vertex Shader code from the file
-		std::string VertexShaderCode;
-		std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
+		string VertexShaderCode;
+		ifstream VertexShaderStream(vertex_file_path, ios::in);
 		if(VertexShaderStream.is_open()){
-			std::string Line = "";
+			string Line = "";
 			while(getline(VertexShaderStream, Line))
 				VertexShaderCode += "\n" + Line;
 			VertexShaderStream.close();
@@ -29,10 +31,10 @@ public:
 		}
 
 		// Read the Fragment Shader code from the file
-		std::string FragmentShaderCode;
-		std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
+		string FragmentShaderCode;
+		ifstream FragmentShaderStream(fragment_file_path, ios::in);
 		if(FragmentShaderStream.is_open()){
-			std::string Line = "";
+			string Line = "";
 			while(getline(FragmentShaderStream, Line))
 				FragmentShaderCode += "\n" + Line;
 			FragmentShaderStream.close();
@@ -51,7 +53,7 @@ public:
 		glGetShaderiv(VertexShaderID, GL_COMPILE_STATUS, &Result);
 		glGetShaderiv(VertexShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
 		if ( InfoLogLength > 0 ){
-			std::vector<char> VertexShaderErrorMessage(InfoLogLength+1);
+			vector<char> VertexShaderErrorMessage(InfoLogLength+1);
 			glGetShaderInfoLog(VertexShaderID, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
 			printf("%s\n", &VertexShaderErrorMessage[0]);
 		}
@@ -65,7 +67,7 @@ public:
 		glGetShaderiv(FragmentShaderID, GL_COMPILE_STATUS, &Result);
 		glGetShaderiv(FragmentShaderID, GL_INFO_LOG_LENGTH, &InfoLogLength);
 		if ( InfoLogLength > 0 ){
-			std::vector<char> FragmentShaderErrorMessage(InfoLogLength+1);
+			vector<char> FragmentShaderErrorMessage(InfoLogLength+1);
 			glGetShaderInfoLog(FragmentShaderID, InfoLogLength, NULL, &FragmentShaderErrorMessage[0]);
 			printf("%s\n", &FragmentShaderErrorMessage[0]);
 		}
@@ -81,7 +83,7 @@ public:
 		glGetProgramiv(ProgramID, GL_LINK_STATUS, &Result);
 		glGetProgramiv(ProgramID, GL_INFO_LOG_LENGTH, &InfoLogLength);
 		if ( InfoLogLength > 0 ){
-			std::vector<char> ProgramErrorMessage(InfoLogLength+1);
+			vector<char> ProgramErrorMessage(InfoLogLength+1);
 			glGetProgramInfoLog(ProgramID, InfoLogLength, NULL, &ProgramErrorMessage[0]);
 			printf("%s\n", &ProgramErrorMessage[0]);
 		}
