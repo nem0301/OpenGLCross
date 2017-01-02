@@ -224,6 +224,34 @@ public:
 
 		clearBufferData();
 
+		for (unsigned int i = 0; i < vertexIndices.size(); i++)
+		{
+			unsigned int vertexIndex = vertexIndices[i];
+			vec3 vertex = tmpVertices[vertexIndex-1];
+			vertex = vertex + this->position;
+			vertices.push_back(vertex);
+		}
+		for (unsigned int i = 0; i < uvIndices.size(); i++)
+		{
+			unsigned int uvIndex = uvIndices[i];
+			vec2 uv = tmpUvs[uvIndex-1];
+			uvs.push_back(uv);
+		}
+		for (unsigned int i = 0; i < normalIndices.size(); i++)
+		{
+			unsigned int normalIndex = normalIndices[i];
+			vec3 normal = tmpNormals[normalIndex-1];
+			normals.push_back(normal);
+		}
+		
+		tmpVertices.clear();
+		tmpUvs.clear();
+		tmpNormals.clear();
+		tmpVertices = vertices;
+		tmpUvs = uvs;
+		tmpNormals = normals;
+		
+		
 		indexVBO(
 			tmpVertices,
 			tmpUvs,
@@ -254,31 +282,6 @@ public:
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
 				&indices[0], GL_STATIC_DRAW);
 
-		
-
-		/*
-		
-		for (unsigned int i = 0; i < vertexIndices.size(); i++)
-		{
-			unsigned int vertexIndex = vertexIndices[i];
-			vec3 vertex = tmpVertices[vertexIndex-1];
-			vertex = vertex + this->position;
-			vertices.push_back(vertex);
-		}
-		for (unsigned int i = 0; i < uvIndices.size(); i++)
-		{
-			unsigned int uvIndex = uvIndices[i];
-			vec2 uv = tmpUvs[uvIndex-1];
-			uvs.push_back(uv);
-		}
-		for (unsigned int i = 0; i < normalIndices.size(); i++)
-		{
-			unsigned int normalIndex = normalIndices[i];
-			vec3 normal = tmpNormals[normalIndex-1];
-			normals.push_back(normal);
-		}
-
-		*/
 	}
 
 	void drawObj()
