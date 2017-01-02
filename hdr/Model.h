@@ -1,22 +1,39 @@
 #include "Common.h"
 #include "GLCommon.h"
 
+struct PackedVertex
+{
+	vec3 postion;
+	vec2 uv;
+	vec3 normal;
+	bool operator<(const struct PackedVertex that) const {
+		return memcmp((void*)this, (void*)&that, sizeof(struct PackedVertex)) > 0;
+	};
+};
+
 class Model
 {
 	vector<vec3> vertices;
 	vector<vec2> uvs;
 	vector<vec3> normals;
+	vector<unsigned short> indices;
 
 	GLuint vertexBuffer;
 	GLuint uvBuffer;
 	GLuint normalBuffer;
+	GLuint elementBuffer;
 
 	vec3 position;
 	
+	GLuint textureID;
+	GLuint texture;
+	
 public:
-	Model(vec3 pos)
+	Model(vec3 pos, GLuint textureID, GLuint texture)
 	{
 		this->position = pos;
+		this->textureID = textureID;
+		this->texture = texture;
 	}
 
 	~Model()
@@ -55,6 +72,83 @@ public:
 	GLuint getNormalBuffer()
 	{
 		return this->normalBuffer;
+	}
+
+	void setPosition(vec3 pos)
+	{
+		this->position = pos;
+	}
+
+	vec3 getPosition()
+	{
+		return  this->position;
+	}
+
+	void setTexture(GLuint textureID, GLuint texture)
+	{
+		this->textureID = textureID;
+		this->texture = texture;
+	}
+
+	void moveObj(vec3 delta)
+	{
+		this->position += delta;
+	}
+
+	bool getSimilarVertexIndex(
+		struct PackedVertex &packed,
+		map<struct PackedVertex, unsigned short> &vertexToOutIndex,
+		unsigned short &result)
+	{
+		map<struct PackedVertex, unsigned short>::iterator it = vertexToOutIndex.find(packed);
+		if ( it == vertexToOutIndex.end())
+		{
+			return false;
+		}
+		else
+		{
+			result = it->second;
+			return true;
+		}
+	}
+
+	void indexVBO(
+		vector<vec3> &inVertices,
+		vector<vec2> &inUvs,
+		vector<vec3> &inNormals,
+		vector<unsigned short> &outIndices,
+		vector<vec3> &outVertices,
+		vector<vec2> &outUvs,
+		vector<vec3> &outNormals)
+	{
+		map<struct PackedVertex, unsigned short> vertexToOutIndex;
+
+		for (unsigned int i = 0; i < inVertices.size(); i++)
+		{
+			struct PackedVertex packed =  {
+				inVertices[i],
+				inUvs[i], 
+				inNormals[i]
+			};
+
+			unsigned short index;;
+			bool found = getSimilarVertexIndex(packed, vertexToOutIndex, index);
+
+			if (found)
+			{
+				outIndices.push_back(index);
+			}
+			else
+			{
+				outVertices.push_back(inVertices[i]);
+				outUvs.push_back(inUvs[i]);
+				outNormals.push_back(inNormals[i]);
+
+				unsigned short newIndex = (unsigned short)outVertices.size() - 1;
+				outIndices.push_back(newIndex);
+				vertexToOutIndex[packed] = newIndex;
+			}
+		}
 	}
 
 	void loadObj(string path) 
@@ -130,6 +224,40 @@ public:
 
 		clearBufferData();
 
+		indexVBO(
+			tmpVertices,
+			tmpUvs,
+			tmpNormals,
+			indices,
+			vertices,
+			uvs,
+			normals);
+
+			
+		glGenBuffers(1, &vertexBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vec3),
+				&vertices[0], GL_STATIC_DRAW);
+
+		glGenBuffers(1, &uvBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+		glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(vec2),
+				&uvs[0], GL_STATIC_DRAW);
+
+		glGenBuffers(1, &normalBuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+		glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(vec3),
+				&normals[0], GL_STATIC_DRAW);
+	
+		glGenBuffers(1, &elementBuffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
+				&indices[0], GL_STATIC_DRAW);
+
+		
+
+		/*
+		
 		for (unsigned int i = 0; i < vertexIndices.size(); i++)
 		{
 			unsigned int vertexIndex = vertexIndices[i];
@@ -150,21 +278,65 @@ public:
 			normals.push_back(normal);
 		}
 
-		glGenBuffers(1, &vertexBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
-		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vec3),
-				&vertices[0], GL_STATIC_DRAW);
-
-		glGenBuffers(1, &uvBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
-		glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(vec2),
-				&uvs[0], GL_STATIC_DRAW);
-
-		glGenBuffers(1, &normalBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
-		glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(vec3),
-				&normals[0], GL_STATIC_DRAW);
+		*/
 	}
+
+	void drawObj()
+	{
+		// Bind our texture in Texture Unit 0
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, this->texture);
+		// Set our "myTextureSampler" sampler to user Texture Unit 0
+		glUniform1i(this->textureID, 0); 
+
+		// vertex buffer
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, getVertexBuffer());
+		glVertexAttribPointer(
+			0,          // attribute 0. vertex
+			3,          // size
+			GL_FLOAT,   // type
+			GL_FALSE,   // nomarlized?
+			0,          // stride
+			(void*)0    // array buffer offset
+		);  
+
+		// uv buffer
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, getUvBuffer());
+		glVertexAttribPointer(
+			1,          // attribute 1. uv
+			2,          // size
+			GL_FLOAT,   // type
+			GL_FALSE,   // nomarlized?
+			0,          // stride
+			(void*)0    // array buffer offset
+		);  
+
+		// normal buffer
+		glEnableVertexAttribArray(2);
+		glBindBuffer(GL_ARRAY_BUFFER, getNormalBuffer());
+		glVertexAttribPointer(
+			2,          // attribute 2 normal
+			3,          // size
+			GL_FLOAT,   // type
+			GL_FALSE,   // nomarlized?
+			0,          // stride
+			(void*)0    // array buffer offset
+		);  
+
+		// draw elements
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+		glDrawElements(
+			GL_TRIANGLES,
+			indices.size(),
+			GL_UNSIGNED_INT,
+			(void*)0
+		);
+		
+
+	}
+
 
 	void clearBufferData()
 	{

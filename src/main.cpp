@@ -74,10 +74,10 @@ int main(int argc, char *argv[])
 
 	Control* mainControl = new Control(window, width, height, vec3(0, 0, 5), 3.14f, 0.0f, 45.0f, 3.0f, 0.005f);
 
-	Model* cubeModel = new Model(vec3(4, 0, 0));
+	Model* cubeModel = new Model(vec3(4, 0, 0), TextureID, Texture);
 	cubeModel->loadObj("./res/cube.obj");
 
-	Model* suzanneModel = new Model(vec3(6, 7, 6));
+	Model* suzanneModel = new Model(vec3(6, 7, 6), TextureID, Texture2);
 	suzanneModel->loadObj("./res/suzanne.obj");
 	
 	glUseProgram(programID);
@@ -104,93 +104,8 @@ int main(int argc, char *argv[])
 		vec3 lightPos = vec3(4, 4, 4);
 		glUniform3f(lightID, lightPos.x, lightPos.y, lightPos.z);
 
-		// Bind our texture in Texture Unit 0
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, Texture);
-		// Set our "myTextureSampler" sampler to user Texture Unit 0
-		glUniform1i(TextureID, 0);
-
-		// vertex buffer
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, cubeModel->getVertexBuffer());
-		glVertexAttribPointer(
-				0,			// attribute 0. vertex
-				3,			// size
-				GL_FLOAT,	// type
-				GL_FALSE,	// nomarlized?
-				0,			// stride
-				(void*)0	// array buffer offset
-				);
-
-		// uv buffer
-		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, cubeModel->getUvBuffer());
-		glVertexAttribPointer(
-				1,			// attribute 1. uv
-				2,			// size
-				GL_FLOAT,	// type
-				GL_FALSE,	// nomarlized?
-				0,			// stride
-				(void*)0	// array buffer offset
-				);
-
-		// normal buffer
-		glEnableVertexAttribArray(2);
-		glBindBuffer(GL_ARRAY_BUFFER, cubeModel->getNormalBuffer());
-		glVertexAttribPointer(
-				2,			// attribute 2 normal
-				3,			// size
-				GL_FLOAT,	// type
-				GL_FALSE,	// nomarlized?
-				0,			// stride
-				(void*)0	// array buffer offset
-				);
-
-		// draw
-		glDrawArrays(GL_TRIANGLES, 0, cubeModel->getVertices().size());
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, Texture2);
-		// Set our "myTextureSampler" sampler to user Texture Unit 0
-		glUniform1i(TextureID, 0);
-
-		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, suzanneModel->getVertexBuffer());
-		glVertexAttribPointer(
-				0,			// attribute 0. vertex
-				3,			// size
-				GL_FLOAT,	// type
-				GL_FALSE,	// nomarlized?
-				0,			// stride
-				(void*)0	// array buffer offset
-				);
-
-		// uv buffer
-		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, suzanneModel->getUvBuffer());
-		glVertexAttribPointer(
-				1,			// attribute 1. uv
-				2,			// size
-				GL_FLOAT,	// type
-				GL_FALSE,	// nomarlized?
-				0,			// stride
-				(void*)0	// array buffer offset
-				);
-
-		// normal buffer
-		glEnableVertexAttribArray(2);
-		glBindBuffer(GL_ARRAY_BUFFER, suzanneModel->getNormalBuffer());
-		glVertexAttribPointer(
-				2,			// attribute 2 normal
-				3,			// size
-				GL_FLOAT,	// type
-				GL_FALSE,	// nomarlized?
-				0,			// stride
-				(void*)0	// array buffer offset
-				);
-
-		// draw
-		glDrawArrays(GL_TRIANGLES, 0, suzanneModel->getVertices().size());
+		cubeModel->drawObj();
+		suzanneModel->drawObj();
 		
 		// disable
 		glDisableVertexAttribArray(0);
