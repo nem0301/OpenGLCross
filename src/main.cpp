@@ -9,6 +9,17 @@
 using namespace std;
 using namespace glm;
 
+void fpsCounter()
+{
+	static float oldTime = glfwGetTime();
+	float curTime = glfwGetTime();
+	float fps = 1.0 / (curTime - oldTime);
+
+	cout << "FPS : " << fps << endl;
+
+	oldTime = curTime;
+}
+
 int main(int argc, char *argv[])
 {
 	if ( !glfwInit() )
