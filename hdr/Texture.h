@@ -1,3 +1,4 @@
+#pragma once
 #include "Common.h" 
 using namespace std;
 
@@ -123,7 +124,7 @@ public:
 		fread(buffer, 1, bufSize, fp);
 		fclose(fp);
 
-		unsigned int components = (fourCC == FOURCC_DXT1) ? 3 : 4;
+		// unsigned int components = (fourCC == FOURCC_DXT1) ? 3 : 4;
 		unsigned int format;
 
 		switch (fourCC)

@@ -18,60 +18,49 @@ class Model
 	vector<vec3> normals;
 	vector<unsigned short> indices;
 
-	GLuint vertexBuffer;
-	GLuint uvBuffer;
-	GLuint normalBuffer;
-	GLuint elementBuffer;
+	mat4* model;
+	mat4* view;
+	mat4* proj;
+
+	vec3 lightPos;
+
+	GLuint vertexBufferID;
+	GLuint uvBufferID;
+	GLuint normalBufferID;
+	GLuint elementBufferID;
 
 	vec3 position;
 	
 	GLuint textureID;
 	GLuint texture;
+
+	GLuint shaderID;
+
+	GLuint uniformMvpMatrixID;
+	GLuint uniformViewMatrixID;
+	GLuint uniformModelMatrixID;
+	GLuint uniformLightID;
 	
 public:
-	Model(vec3 pos, GLuint textureID, GLuint texture)
+	Model(vec3 pos, GLuint textureID, GLuint texture,
+		GLuint shaderID, GLuint mvpID, GLuint viewID, GLuint modelID, GLuint lightID)
 	{
 		this->position = pos;
 		this->textureID = textureID;
 		this->texture = texture;
+		this->shaderID = shaderID;
+		this->uniformMvpMatrixID = mvpID;
+		this->uniformViewMatrixID = viewID;
+		this->uniformModelMatrixID = modelID;
+		this->uniformLightID = lightID;
 	}
 
 	~Model()
 	{
 		clearBufferData();
-		glDeleteBuffers(1, &vertexBuffer);
-		glDeleteBuffers(1, &uvBuffer);
-		glDeleteBuffers(1, &normalBuffer);
-	}
-
-	vector<vec3> getVertices()
-	{
-		return this->vertices;
-	}
-
-	vector<vec2> getUvs()
-	{
-		return this->uvs;
-	}
-
-	vector<vec3> getNormals()
-	{
-		return this->normals;
-	}
-
-	GLuint getVertexBuffer()
-	{
-		return this->vertexBuffer;
-	}
-
-	GLuint getUvBuffer()
-	{
-		return this->uvBuffer;
-	}
-
-	GLuint getNormalBuffer()
-	{
-		return this->normalBuffer;
+		glDeleteBuffers(1, &vertexBufferID);
+		glDeleteBuffers(1, &uvBufferID);
+		glDeleteBuffers(1, &normalBufferID);
 	}
 
 	void setPosition(vec3 pos)
@@ -93,6 +82,26 @@ public:
 	void moveObj(vec3 delta)
 	{
 		this->position += delta;
+	}
+
+	void setModel(mat4* &m)
+	{
+		model = m;
+	}
+
+	void setView(mat4* &v)
+	{
+		view = v;
+	}
+
+	void setProj(mat4* &p)
+	{
+		proj = p;
+	}
+	
+	void setLightPos(vec3 &lightPos)
+	{
+		this->lightPos = lightPos;
 	}
 
 	bool getSimilarVertexIndex(
@@ -228,7 +237,7 @@ public:
 		{
 			unsigned int vertexIndex = vertexIndices[i];
 			vec3 vertex = tmpVertices[vertexIndex-1];
-			vertex = vertex + this->position;
+			vertex = vertex;
 			vertices.push_back(vertex);
 		}
 		for (unsigned int i = 0; i < uvIndices.size(); i++)
@@ -262,30 +271,45 @@ public:
 			normals);
 
 			
-		glGenBuffers(1, &vertexBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+		glGenBuffers(1, &vertexBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
 		glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vec3),
 				&vertices[0], GL_STATIC_DRAW);
 
-		glGenBuffers(1, &uvBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+		glGenBuffers(1, &uvBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
 		glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(vec2),
 				&uvs[0], GL_STATIC_DRAW);
 
-		glGenBuffers(1, &normalBuffer);
-		glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+		glGenBuffers(1, &normalBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, normalBufferID);
 		glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(vec3),
 				&normals[0], GL_STATIC_DRAW);
 	
-		glGenBuffers(1, &elementBuffer);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+		glGenBuffers(1, &elementBufferID);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferID);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
 				&indices[0], GL_STATIC_DRAW);
-
 	}
+
 
 	void drawObj()
 	{
+		glUseProgram(shaderID);
+		*model = translate(*model, position);
+		mat4 mvp = *proj * *view * *model;
+		mat4 view = *this->view;
+		mat4 model = *this->model;
+
+		// TODO : modify mvp for setting position of obj
+		
+		
+		glUniformMatrix4fv(uniformMvpMatrixID, 1, GL_FALSE, &mvp[0][0]);
+		glUniformMatrix4fv(uniformViewMatrixID, 1, GL_FALSE, &view[0][0]);
+		glUniformMatrix4fv(uniformModelMatrixID, 1, GL_FALSE, &model[0][0]);
+
+		glUniform3f(uniformLightID, lightPos.x, lightPos.y, lightPos.z);
+
 		// Bind our texture in Texture Unit 0
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, this->texture);
@@ -294,7 +318,7 @@ public:
 
 		// vertex buffer
 		glEnableVertexAttribArray(0);
-		glBindBuffer(GL_ARRAY_BUFFER, getVertexBuffer());
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferID);
 		glVertexAttribPointer(
 			0,          // attribute 0. vertex
 			3,          // size
@@ -306,7 +330,7 @@ public:
 
 		// uv buffer
 		glEnableVertexAttribArray(1);
-		glBindBuffer(GL_ARRAY_BUFFER, getUvBuffer());
+		glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
 		glVertexAttribPointer(
 			1,          // attribute 1. uv
 			2,          // size
@@ -318,7 +342,7 @@ public:
 
 		// normal buffer
 		glEnableVertexAttribArray(2);
-		glBindBuffer(GL_ARRAY_BUFFER, getNormalBuffer());
+		glBindBuffer(GL_ARRAY_BUFFER, normalBufferID);
 		glVertexAttribPointer(
 			2,          // attribute 2 normal
 			3,          // size
@@ -329,15 +353,17 @@ public:
 		);  
 
 		// draw elements
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferID);
 		glDrawElements(
 			GL_TRIANGLES,
 			indices.size(),
-			GL_UNSIGNED_INT,
+			GL_UNSIGNED_SHORT,
 			(void*)0
 		);
-		
 
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+		glDisableVertexAttribArray(2);
 	}
 
 

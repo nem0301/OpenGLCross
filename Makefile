@@ -18,16 +18,15 @@ OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 DEPS = $(OBJS:%.o=%.d)
 
 all : $(TARGET)
-	glslangValidator ./shader/*
-	cp ./shader/* ./tgt
-	cp -r ./res ./tgt
+	@glslangValidator ./shader/*
+	@cp -r ./shader ./tgt
+	@cp -r ./res ./tgt
 
 $(TARGET) : $(OBJS)
 	$(LD) -o $@ $^ $(LIBS) 
 
 $(OBJS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp 
-	$(CXX) $(CLFAGS) $(INCLUDES)  -MMD -o $@ -c $<
-
+	$(CXX) $(CFLAGS) $(INCLUDES)  -MMD -o $@ -c $<
 
 .PHONY : clean
 clean :

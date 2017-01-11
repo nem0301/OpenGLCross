@@ -85,6 +85,8 @@ public:
 		int l = sizeof(client);
 		int rc = recvfrom(recvSock,(char*)ipc_msg,sizeof(ipc_t), 0,
 				(struct sockaddr *)&client, &l);
+
+		cout << rc << ipc->len << endl;
 	}
 
 };

@@ -5,19 +5,28 @@
 #include "Texture.h"
 #include "Control.h"
 #include "Model.h"
+#include "Text2D.h"
+
 
 using namespace std;
 using namespace glm;
 
-void fpsCounter()
+int fpsCounter()
 {
 	static float oldTime = glfwGetTime();
+	static int frames = 0;
+
 	float curTime = glfwGetTime();
-	float fps = 1.0 / (curTime - oldTime);
 
-	cout << "FPS : " << fps << endl;
-
-	oldTime = curTime;
+	frames++;
+	if (curTime - oldTime > 1.0)
+	{
+		int ret = frames;
+		frames = 0;
+		oldTime += 1.0;
+		return ret;
+	}
+	return -1;
 }
 
 int main(int argc, char *argv[])
@@ -34,10 +43,13 @@ int main(int argc, char *argv[])
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL
 
 	// Open a window and create its OpenGL context
-	int width = 2560;
-	int height = 1440;
+	//int width = 2560;
+	//int height = 1440;
+	int width = 1600;
+	int height = 900;
 	GLFWwindow* window;
-	window = glfwCreateWindow(width, height, "opengl", glfwGetPrimaryMonitor(), NULL);
+	//window = glfwCreateWindow(width, height, "opengl", glfwGetPrimaryMonitor(), NULL);
+	window = glfwCreateWindow(width, height, "opengl", NULL, NULL);
 	if( window == NULL ){
 		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
 		glfwTerminate();
@@ -71,57 +83,73 @@ int main(int argc, char *argv[])
 	glBindVertexArray(vertexArrayID);
 
 	// load shader
-	GLuint programID = Shader::loadShaders( "vertexShader.vert", "fragmentShader.frag" );
+	GLuint shaderID = Shader::loadShaders( "./shader/modelShader.vert", "./shader/modelShader.frag" );
 
-	GLuint mvpMatrixID = glGetUniformLocation(programID, "MVP");
-	GLuint viewMatrixID = glGetUniformLocation(programID, "V");
-	GLuint modelMatrixID = glGetUniformLocation(programID, "M");
+	GLuint mvpMatrixID = glGetUniformLocation(shaderID, "MVP");
+	GLuint viewMatrixID = glGetUniformLocation(shaderID, "V");
+	GLuint modelMatrixID = glGetUniformLocation(shaderID, "M");
+	GLuint TextureID  = glGetUniformLocation(shaderID, "myTextureSampler");
+	GLuint lightID = glGetUniformLocation(shaderID, "lightPositionWorldSpace");
 
-	GLuint Texture = Texture::loadDds("./res/uvtemplate.DDS");
-	GLuint Texture2 = Texture::loadDds("./res/uvmap.DDS");
-
-	GLuint TextureID  = glGetUniformLocation(programID, "myTextureSampler");
-
-
-	Control* mainControl = new Control(window, width, height, vec3(0, 0, 5), 3.14f, 0.0f, 45.0f, 3.0f, 0.005f);
-
-	Model* cubeModel = new Model(vec3(4, 0, 0), TextureID, Texture);
+	GLuint cubeTexture = Texture::loadDds("./res/uvtemplate.DDS");
+	Model* cubeModel = new Model(vec3(4, 0, 0), TextureID, cubeTexture,
+		shaderID, mvpMatrixID, viewMatrixID, modelMatrixID, lightID);
 	cubeModel->loadObj("./res/cube.obj");
 
-	Model* suzanneModel = new Model(vec3(6, 7, 6), TextureID, Texture2);
+	GLuint suzanneTexture = Texture::loadDds("./res/uvmap.DDS");
+	Model* suzanneModel = new Model(vec3(6, 7, 6), TextureID, suzanneTexture,
+		shaderID, mvpMatrixID, viewMatrixID, modelMatrixID, lightID);
 	suzanneModel->loadObj("./res/suzanne.obj");
-	
-	glUseProgram(programID);
-	GLuint lightID = glGetUniformLocation(programID, "lightPositionWorldSpace");
+
+	Text2D* text = new Text2D();
+	text->initText2D("./res/Holstein.DDS", "./shader/textShader.vert", "/shader/textShader.frag");
+
+	// control
+	Control* mainControl = new Control(window, width, height, vec3(0, 0, 5), 3.14f, 0.0f, 45.0f, 3.0f, 0.005f);
+
+	string fpsText = "0";
+
+	mat4* model; 
+	mat4* view;
+	mat4* proj;
+	// cubeModel->setMVP(model, view, proj);
+	// suzanneModel->setMVP(model, view, proj);
+
+	*model = mat4(1.0f);
+
+	cubeModel->setModel(model);
+	cubeModel->setView(view);
+	cubeModel->setProj(proj);
+	suzanneModel->setModel(model);
+	suzanneModel->setView(view);
+	suzanneModel->setProj(proj);
+
+
+	vec3 lightPos = vec3(4, 4, 4);
+	cubeModel->setLightPos(lightPos);
+	suzanneModel->setLightPos(lightPos);
 
 	do{
 		float curTime = glfwGetTime();
+
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// use shader
-		glUseProgram(programID);
-
+		// control
 		mainControl->computeMVPByInputs(curTime);
-		mat4 proj = mainControl->getProjMatrix();
-		mat4 view = mainControl->getViewMatrix();
-		mat4 model = mat4(1.0f);
-		mat4 mvp = proj * view * model;
+		*proj = mainControl->getProjMatrix();
+		*view = mainControl->getViewMatrix();
 
-		// mvp uniform
-		glUniformMatrix4fv(mvpMatrixID, 1, GL_FALSE, &mvp[0][0]);
-		glUniformMatrix4fv(viewMatrixID, 1, GL_FALSE, &view[0][0]);
-		glUniformMatrix4fv(modelMatrixID, 1, GL_FALSE, &model[0][0]);
-
-		vec3 lightPos = vec3(4, 4, 4);
-		glUniform3f(lightID, lightPos.x, lightPos.y, lightPos.z);
-
+		// draw objects
 		cubeModel->drawObj();
 		suzanneModel->drawObj();
-		
-		// disable
-		glDisableVertexAttribArray(0);
-		glDisableVertexAttribArray(1);
-		glDisableVertexAttribArray(2);
+
+		//fps
+		int frames = fpsCounter();
+		if ( frames != -1 )
+		{
+			fpsText = to_string(frames);
+		}
+		text->printText(fpsText.c_str(), 0, 0, 30);
 
 		// Swap buffers
 		glfwSwapBuffers(window);
@@ -131,10 +159,11 @@ int main(int argc, char *argv[])
 	while( glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS &&
 			glfwWindowShouldClose(window) == 0 );
 
-	glDeleteProgram(programID);
+	glDeleteProgram(shaderID);
 	glDeleteTextures(1, &TextureID);
 	glDeleteVertexArrays(1, &vertexArrayID);
 
+	delete text;
 	glfwTerminate();
 
 	return 0;
