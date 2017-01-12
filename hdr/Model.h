@@ -300,8 +300,6 @@ public:
 		mat4 mvp = proj * view * model;
 		mat4 view = this->view;
 		mat4 model = this->model;
-
-		// TODO : modify mvp for setting position of obj
 		
 		
 		glUniformMatrix4fv(uniformMvpMatrixID, 1, GL_FALSE, &mvp[0][0]);

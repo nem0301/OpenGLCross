@@ -45,7 +45,6 @@ public:
 
 		double xpos, ypos;
 		glfwGetCursorPos(window, &xpos, &ypos);
-		
 		glfwSetCursorPos(window, mx, my);
 
 		horizontalAngle += mouseSpeed * deltaTime * (mx - xpos) * 8;

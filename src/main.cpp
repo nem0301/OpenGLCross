@@ -65,7 +65,8 @@ int main(int argc, char *argv[])
 
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
@@ -97,7 +98,7 @@ int main(int argc, char *argv[])
 	cubeModel->loadObj("./res/cube.obj");
 
 	GLuint suzanneTexture = Texture::loadDds("./res/uvmap.DDS");
-	Model* suzanneModel = new Model(vec3(6, 7, 6), TextureID, suzanneTexture,
+	Model* suzanneModel = new Model(vec3(6, 7, -6), TextureID, suzanneTexture,
 		shaderID, mvpMatrixID, viewMatrixID, modelMatrixID, lightID);
 	suzanneModel->loadObj("./res/suzanne.obj");
 
