@@ -6,19 +6,28 @@ APP_NAME = app.exe
 TARGET = $(TGT_DIR)/$(APP_NAME)
 
 WIN = x86_64-w64-mingw32-
-CXX = $(WIN)g++
-LD  = $(WIN)g++
+WIN_CXX = $(WIN)g++
+WIN_LD  = $(WIN)g++
+
+OSX_CXX = g++
+OSX_LD  = g++
 
 INCLUDES = -I./hdr
-CFLAGS = -g -std=c++11 -Wall -DGLEW_STATIC
-LIBS = -L./lib -lglfw3 -lgdi32 -lglew32 -lopengl32 -lws2_32 -static-libstdc++ -static-libgcc 
+WIN_CFLAGS = -g -std=c++11 -Wall -DGLEW_STATIC
+OSX_CFLAGS = -g -std=c++11 -Wall -DGLEW_STATIC
+WIN_LIBS = -L./lib -lglfw3 -lgdi32 -lglew32 -lopengl32 -lws2_32 -static-libstdc++ -static-libgcc 
+OSX_LIBS = -framework OpenGL -lglfw -lglew
 
 SRCS = $(wildcard $(SRC_DIR)/*.cpp)
 OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 DEPS = $(OBJS:%.o=%.d)
 
-all : $(TARGET)
-	@glslangValidator ./shader/*
+LIBS = $(OSX_LIBS)
+CFLAGS = $(OSX_CFLAGS)
+CXX = $(OSX_CXX)
+LD = $(OSX_LD)
+
+all : $(TARGET) 
 	@cp -r ./shader ./tgt
 	@cp -r ./res ./tgt
 
@@ -27,6 +36,7 @@ $(TARGET) : $(OBJS)
 
 $(OBJS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp 
 	$(CXX) $(CFLAGS) $(INCLUDES)  -MMD -o $@ -c $<
+
 
 .PHONY : clean
 clean :

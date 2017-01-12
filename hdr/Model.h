@@ -18,9 +18,9 @@ class Model
 	vector<vec3> normals;
 	vector<unsigned short> indices;
 
-	mat4* model;
-	mat4* view;
-	mat4* proj;
+	mat4 model;
+	mat4 view;
+	mat4 proj;
 
 	vec3 lightPos;
 
@@ -84,17 +84,17 @@ public:
 		this->position += delta;
 	}
 
-	void setModel(mat4* &m)
+	void setModel(mat4 &m)
 	{
 		model = m;
 	}
 
-	void setView(mat4* &v)
+	void setView(mat4 &v)
 	{
 		view = v;
 	}
 
-	void setProj(mat4* &p)
+	void setProj(mat4 &p)
 	{
 		proj = p;
 	}
@@ -296,10 +296,10 @@ public:
 	void drawObj()
 	{
 		glUseProgram(shaderID);
-		*model = translate(*model, position);
-		mat4 mvp = *proj * *view * *model;
-		mat4 view = *this->view;
-		mat4 model = *this->model;
+		model = translate(model, position);
+		mat4 mvp = proj * view * model;
+		mat4 view = this->view;
+		mat4 model = this->model;
 
 		// TODO : modify mvp for setting position of obj
 		

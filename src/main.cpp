@@ -1,7 +1,7 @@
 #include "Common.h"
 #include "GLCommon.h"
 #include "Shader.h"
-#include "Ipc.h"
+// #include "Ipc.h"
 #include "Texture.h"
 #include "Control.h"
 #include "Model.h"
@@ -37,8 +37,8 @@ int main(int argc, char *argv[])
 	}
 
 	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // We want OpenGL 3.3
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // We want OpenGL 3.3
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL
 
@@ -102,28 +102,16 @@ int main(int argc, char *argv[])
 	suzanneModel->loadObj("./res/suzanne.obj");
 
 	Text2D* text = new Text2D();
-	text->initText2D("./res/Holstein.DDS", "./shader/textShader.vert", "/shader/textShader.frag");
+	text->initText2D("./res/Holstein.DDS", "./shader/textShader.vert", "./shader/textShader.frag");
 
 	// control
 	Control* mainControl = new Control(window, width, height, vec3(0, 0, 5), 3.14f, 0.0f, 45.0f, 3.0f, 0.005f);
 
 	string fpsText = "0";
 
-	mat4* model; 
-	mat4* view;
-	mat4* proj;
-	// cubeModel->setMVP(model, view, proj);
-	// suzanneModel->setMVP(model, view, proj);
-
-	*model = mat4(1.0f);
-
-	cubeModel->setModel(model);
-	cubeModel->setView(view);
-	cubeModel->setProj(proj);
-	suzanneModel->setModel(model);
-	suzanneModel->setView(view);
-	suzanneModel->setProj(proj);
-
+	mat4 model = mat4(1.0f);
+	mat4 view;
+	mat4 proj;
 
 	vec3 lightPos = vec3(4, 4, 4);
 	cubeModel->setLightPos(lightPos);
@@ -136,8 +124,16 @@ int main(int argc, char *argv[])
 
 		// control
 		mainControl->computeMVPByInputs(curTime);
-		*proj = mainControl->getProjMatrix();
-		*view = mainControl->getViewMatrix();
+		proj = mainControl->getProjMatrix();
+		view = mainControl->getViewMatrix();
+
+        cubeModel->setModel(model);
+        cubeModel->setView(view);
+        cubeModel->setProj(proj);
+        suzanneModel->setModel(model);
+        suzanneModel->setView(view);
+        suzanneModel->setProj(proj);
+
 
 		// draw objects
 		cubeModel->drawObj();
