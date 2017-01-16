@@ -22,12 +22,19 @@ SRCS = $(wildcard $(SRC_DIR)/*.cpp)
 OBJS = $(SRCS:$(SRC_DIR)/%.cpp=$(OBJ_DIR)/%.o)
 DEPS = $(OBJS:%.o=%.d)
 
-LIBS = $(OSX_LIBS)
-CFLAGS = $(OSX_CFLAGS)
-CXX = $(OSX_CXX)
-LD = $(OSX_LD)
+#LIBS = $(OSX_LIBS)
+#CFLAGS = $(OSX_CFLAGS)
+#CXX = $(OSX_CXX)
+#LD = $(OSX_LD)
+
+LIBS = $(WIN_LIBS)
+CFLAGS = $(WIN_CFLAGS)
+CXX = $(WIN_CXX)
+LD = $(WIN_LD)
+
 
 all : $(TARGET) 
+	glslangValidator shader/*
 	@cp -r ./shader ./tgt
 	@cp -r ./res ./tgt
 
