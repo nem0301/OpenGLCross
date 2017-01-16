@@ -16,6 +16,8 @@ class Model
 	vector<vec3> vertices;
 	vector<vec2> uvs;
 	vector<vec3> normals;
+    vector<vec3> tangents;
+    vector<vec3> bitangents;
 	vector<unsigned short> indices;
 
 	mat4 model;
@@ -27,31 +29,50 @@ class Model
 	GLuint vertexBufferID;
 	GLuint uvBufferID;
 	GLuint normalBufferID;
+    GLuint tangentBufferID;
+    GLuint bitangentBufferID;
 	GLuint elementBufferID;
 
 	vec3 position;
 	
-	GLuint textureID;
-	GLuint texture;
+	GLuint diffuseTextureID;
+	GLuint diffuseTexture;
+	GLuint normalTextureID;
+	GLuint normalTexture;
+	GLuint specularTextureID;
+	GLuint specularTexture;
 
 	GLuint shaderID;
 
 	GLuint uniformMvpMatrixID;
 	GLuint uniformViewMatrixID;
 	GLuint uniformModelMatrixID;
+	GLuint uniformMVMatrixID;
+	GLuint uniformMV3x3MatrixID;
 	GLuint uniformLightID;
 	
 public:
-	Model(vec3 pos, GLuint textureID, GLuint texture,
-		GLuint shaderID, GLuint mvpID, GLuint viewID, GLuint modelID, GLuint lightID)
+	Model(vec3 pos, 
+        GLuint diffuseTextureID, GLuint diffuseTexture,
+        GLuint normalTextureID, GLuint normalTexture,
+        GLuint specularTextureID, GLuint specularTexture,
+		GLuint shaderID, GLuint mvpID, GLuint viewID, GLuint modelID, 
+        GLuint mvID, GLuint mv33ID,
+        GLuint lightID)
 	{
 		this->position = pos;
-		this->textureID = textureID;
-		this->texture = texture;
+        this->diffuseTextureID = diffuseTextureID;
+        this->diffuseTexture = diffuseTexture;
+        this->normalTextureID = normalTextureID;
+        this->normalTexture = normalTexture;
+        this->specularTextureID = specularTextureID;
+        this->specularTexture = specularTexture;
 		this->shaderID = shaderID;
 		this->uniformMvpMatrixID = mvpID;
 		this->uniformViewMatrixID = viewID;
 		this->uniformModelMatrixID = modelID;
+		this->uniformMVMatrixID = mvID;
+		this->uniformMV3x3MatrixID = mv33ID;
 		this->uniformLightID = lightID;
 	}
 
@@ -61,6 +82,8 @@ public:
 		glDeleteBuffers(1, &vertexBufferID);
 		glDeleteBuffers(1, &uvBufferID);
 		glDeleteBuffers(1, &normalBufferID);
+		glDeleteBuffers(1, &tangentBufferID);
+		glDeleteBuffers(1, &bitangentBufferID);
 	}
 
 	void setPosition(vec3 pos)
@@ -71,12 +94,6 @@ public:
 	vec3 getPosition()
 	{
 		return  this->position;
-	}
-
-	void setTexture(GLuint textureID, GLuint texture)
-	{
-		this->textureID = textureID;
-		this->texture = texture;
 	}
 
 	void moveObj(vec3 delta)
@@ -121,6 +138,59 @@ public:
 		}
 	}
 
+    void computeTangentsBasis(
+        vector<vec3> &vertices,
+        vector<vec2> &uvs,
+        vector<vec3> &normals,
+        vector<vec3> &tangents,
+        vector<vec3> &bitangents)
+    {
+        for (unsigned int i = 0; i < vertices.size(); i+=3)
+        {
+            vec3 &v0 = vertices[i+0];
+            vec3 &v1 = vertices[i+1];
+            vec3 &v2 = vertices[i+2];
+
+            vec2 &uv0 = uvs[i+0];
+            vec2 &uv1 = uvs[i+1];
+            vec2 &uv2 = uvs[i+2];
+
+            vec3 deltaPos1 = v1 - v0;
+            vec3 deltaPos2 = v2 - v0;
+
+            vec2 deltaUV1 = uv1 - uv0;
+            vec2 deltaUV2 = uv2 - uv0;
+
+            float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+            vec3 tangent = (deltaPos1 * deltaUV2.y - deltaPos2 * deltaUV1.y) * r;
+            vec3 bitangent = (deltaPos2 * deltaUV1.x - deltaPos1 * deltaUV2.x) * r;
+
+            tangents.push_back(tangent);
+            tangents.push_back(tangent);
+            tangents.push_back(tangent);
+            
+            bitangents.push_back(bitangent);
+            bitangents.push_back(bitangent);
+            bitangents.push_back(bitangent);
+        }
+
+        for (unsigned int i = 0; i < vertices.size(); i+=1)
+        {
+            vec3 &n = normals[i];
+            vec3 &t = tangents[i];
+            vec3 &b = bitangents[i];
+
+            t = normalize(t - n * dot(n, t));
+
+            if ( dot(cross(n, t), b) < 0.0f)
+            {
+                t = t * -1.0f;
+            }
+        }
+
+
+    }
+
 	void indexVBO(
 		vector<vec3> &inVertices,
 		vector<vec2> &inUvs,
@@ -152,6 +222,56 @@ public:
 				outVertices.push_back(inVertices[i]);
 				outUvs.push_back(inUvs[i]);
 				outNormals.push_back(inNormals[i]);
+
+				unsigned short newIndex = (unsigned short)outVertices.size() - 1;
+				outIndices.push_back(newIndex);
+				vertexToOutIndex[packed] = newIndex;
+			}
+		}
+	}
+
+	void indexVBOTBN(
+		vector<vec3> &inVertices,
+		vector<vec2> &inUvs,
+		vector<vec3> &inNormals,
+        vector<vec3> &inTangents,
+        vector<vec3> &inBitangents,
+		vector<unsigned short> &outIndices,
+		vector<vec3> &outVertices,
+		vector<vec2> &outUvs,
+		vector<vec3> &outNormals,
+        vector<vec3> &outTangents,
+        vector<vec3> &outBitangents
+        )
+	{
+		map<struct PackedVertex, unsigned short> vertexToOutIndex;
+
+		for (unsigned int i = 0; i < inVertices.size(); i++)
+		{
+			struct PackedVertex packed =  {
+				inVertices[i],
+				inUvs[i], 
+				inNormals[i]
+			};
+
+			unsigned short index;;
+			bool found = getSimilarVertexIndex(packed, vertexToOutIndex, index);
+
+			if (found)
+			{
+				outIndices.push_back(index);
+
+                outTangents[index] += inTangents[i];
+                outBitangents[index] += inBitangents[i];
+			}
+			else
+			{
+				outVertices.push_back(inVertices[i]);
+				outUvs.push_back(inUvs[i]);
+				outNormals.push_back(inNormals[i]);
+
+                outTangents.push_back(inTangents[i]);
+                outBitangents.push_back(inBitangents[i]);
 
 				unsigned short newIndex = (unsigned short)outVertices.size() - 1;
 				outIndices.push_back(newIndex);
@@ -259,16 +379,37 @@ public:
 		tmpVertices = vertices;
 		tmpUvs = uvs;
 		tmpNormals = normals;
+        vector<vec3> tmpTangents;
+        vector<vec3> tmpBitangents;
+
+        computeTangentsBasis(
+            tmpVertices, tmpUvs, tmpNormals,
+            tmpTangents, tmpBitangents
+        );
 		
 		
-		indexVBO(
+//		indexVBO(
+//			tmpVertices,
+//			tmpUvs,
+//			tmpNormals,
+//			indices,
+//			vertices,
+//			uvs,
+//			normals);
+
+		indexVBOTBN(
 			tmpVertices,
 			tmpUvs,
 			tmpNormals,
+            tmpTangents,
+            tmpBitangents,
 			indices,
 			vertices,
 			uvs,
-			normals);
+			normals,
+            tangents,
+            bitangents
+            );
 
 			
 		glGenBuffers(1, &vertexBufferID);
@@ -285,6 +426,16 @@ public:
 		glBindBuffer(GL_ARRAY_BUFFER, normalBufferID);
 		glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(vec3),
 				&normals[0], GL_STATIC_DRAW);
+
+		glGenBuffers(1, &tangentBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, tangentBufferID);
+		glBufferData(GL_ARRAY_BUFFER, tangents.size() * sizeof(vec2),
+				&tangents[0], GL_STATIC_DRAW);
+
+		glGenBuffers(1, &bitangentBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, bitangentBufferID);
+		glBufferData(GL_ARRAY_BUFFER, bitangents.size() * sizeof(vec2),
+				&bitangents[0], GL_STATIC_DRAW);
 	
 		glGenBuffers(1, &elementBufferID);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferID);
@@ -300,19 +451,37 @@ public:
 		mat4 mvp = proj * view * model;
 		mat4 view = this->view;
 		mat4 model = this->model;
+        mat4 mv = view * model;
+        mat3 mv33 = mat3(mv);
 		
 		
 		glUniformMatrix4fv(uniformMvpMatrixID, 1, GL_FALSE, &mvp[0][0]);
 		glUniformMatrix4fv(uniformViewMatrixID, 1, GL_FALSE, &view[0][0]);
 		glUniformMatrix4fv(uniformModelMatrixID, 1, GL_FALSE, &model[0][0]);
 
+
+		glUniformMatrix4fv(uniformMVMatrixID, 1, GL_FALSE, &mv[0][0]);
+		glUniformMatrix3fv(uniformMV3x3MatrixID, 1, GL_FALSE, &mv33[0][0]);
+
 		glUniform3f(uniformLightID, lightPos.x, lightPos.y, lightPos.z);
 
-		// Bind our texture in Texture Unit 0
+		// Bind our diffuse texture in Texture Unit 0
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, this->texture);
-		// Set our "myTextureSampler" sampler to user Texture Unit 0
-		glUniform1i(this->textureID, 0); 
+		glBindTexture(GL_TEXTURE_2D, this->diffuseTexture);
+		// Set our "diffuseTextureSampler" sampler to user Texture Unit 0
+		glUniform1i(this->diffuseTextureID, 0); 
+
+		// Bind our normal texture in Texture Unit 0
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, this->normalTexture);
+		// Set our "normalTextureSampler" sampler to user Texture Unit 0
+		glUniform1i(this->normalTextureID, 1); 
+
+		// Bind our specular texture in Texture Unit 0
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, this->specularTexture);
+		// Set our "specularTextureSampler" sampler to user Texture Unit 0
+		glUniform1i(this->specularTextureID, 2); 
 
 		// vertex buffer
 		glEnableVertexAttribArray(0);
@@ -350,6 +519,30 @@ public:
 			(void*)0    // array buffer offset
 		);  
 
+        // tangent buffer
+		glEnableVertexAttribArray(3);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
+		glVertexAttribPointer(
+			3,          // attribute 1. uv
+			3,          // size
+			GL_FLOAT,   // type
+			GL_FALSE,   // nomarlized?
+			0,          // stride
+			(void*)0    // array buffer offset
+		);  
+
+        // bitangent buffer
+		glEnableVertexAttribArray(4);
+		glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
+		glVertexAttribPointer(
+			4,          // attribute 1. uv
+			3,          // size
+			GL_FLOAT,   // type
+			GL_FALSE,   // nomarlized?
+			0,          // stride
+			(void*)0    // array buffer offset
+		);  
+
 		// draw elements
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferID);
 		glDrawElements(
@@ -362,6 +555,8 @@ public:
 		glDisableVertexAttribArray(0);
 		glDisableVertexAttribArray(1);
 		glDisableVertexAttribArray(2);
+		glDisableVertexAttribArray(3);
+		glDisableVertexAttribArray(4);
 	}
 
 

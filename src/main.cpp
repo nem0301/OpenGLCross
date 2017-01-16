@@ -37,8 +37,8 @@ int main(int argc, char *argv[])
 	}
 
 	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3); // We want OpenGL 3.3
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // We want OpenGL 3.3
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL
 
@@ -65,7 +65,6 @@ int main(int argc, char *argv[])
 
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
-	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
@@ -89,18 +88,25 @@ int main(int argc, char *argv[])
 	GLuint mvpMatrixID = glGetUniformLocation(shaderID, "MVP");
 	GLuint viewMatrixID = glGetUniformLocation(shaderID, "V");
 	GLuint modelMatrixID = glGetUniformLocation(shaderID, "M");
-	GLuint TextureID  = glGetUniformLocation(shaderID, "myTextureSampler");
+	GLuint mvID = glGetUniformLocation(shaderID, "MV");
+	GLuint mv33ID = glGetUniformLocation(shaderID, "MV3x3");
+	GLuint diffuseTextureID  = glGetUniformLocation(shaderID, "diffuseTextureSampler");
+	GLuint normalTextureID  = glGetUniformLocation(shaderID, "normalTextureSampler");
+	GLuint specularTextureID  = glGetUniformLocation(shaderID, "specularTextureSampler");
 	GLuint lightID = glGetUniformLocation(shaderID, "lightPositionWorldSpace");
 
-	GLuint cubeTexture = Texture::loadDds("./res/uvtemplate.DDS");
-	Model* cubeModel = new Model(vec3(4, 0, 0), TextureID, cubeTexture,
-		shaderID, mvpMatrixID, viewMatrixID, modelMatrixID, lightID);
-	cubeModel->loadObj("./res/cube.obj");
+	GLuint cylinderDiffuseTexture = Texture::loadDds("./res/diffuse.DDS");
+	GLuint cylinderNormalTexture = Texture::loadBmp("./res/normal.bmp");
+	GLuint cylinderSpecularTexture = Texture::loadDds("./res/specular.DDS");
 
-	GLuint suzanneTexture = Texture::loadDds("./res/uvmap.DDS");
-	Model* suzanneModel = new Model(vec3(6, 7, -6), TextureID, suzanneTexture,
-		shaderID, mvpMatrixID, viewMatrixID, modelMatrixID, lightID);
-	suzanneModel->loadObj("./res/suzanne.obj");
+	Model* cylinderModel = new Model(vec3(4, 0, 0), 
+        diffuseTextureID, cylinderDiffuseTexture,
+        normalTextureID, cylinderNormalTexture,
+        specularTextureID, cylinderSpecularTexture,
+		shaderID, mvpMatrixID, viewMatrixID, modelMatrixID, 
+        mvID, mv33ID,
+        lightID);
+	cylinderModel->loadObj("./res/cylinder.obj");
 
 	Text2D* text = new Text2D();
 	text->initText2D("./res/Holstein.DDS", "./shader/textShader.vert", "./shader/textShader.frag");
@@ -115,8 +121,7 @@ int main(int argc, char *argv[])
 	mat4 proj;
 
 	vec3 lightPos = vec3(4, 4, 4);
-	cubeModel->setLightPos(lightPos);
-	suzanneModel->setLightPos(lightPos);
+	cylinderModel->setLightPos(lightPos);
 
 	do{
 		float curTime = glfwGetTime();
@@ -128,17 +133,12 @@ int main(int argc, char *argv[])
 		proj = mainControl->getProjMatrix();
 		view = mainControl->getViewMatrix();
 
-        cubeModel->setModel(model);
-        cubeModel->setView(view);
-        cubeModel->setProj(proj);
-        suzanneModel->setModel(model);
-        suzanneModel->setView(view);
-        suzanneModel->setProj(proj);
-
+        cylinderModel->setModel(model);
+        cylinderModel->setView(view);
+        cylinderModel->setProj(proj);
 
 		// draw objects
-		cubeModel->drawObj();
-		suzanneModel->drawObj();
+		cylinderModel->drawObj();
 
 		//fps
 		int frames = fpsCounter();
@@ -157,7 +157,9 @@ int main(int argc, char *argv[])
 			glfwWindowShouldClose(window) == 0 );
 
 	glDeleteProgram(shaderID);
-	glDeleteTextures(1, &TextureID);
+	glDeleteTextures(1, &diffuseTextureID);
+	glDeleteTextures(1, &normalTextureID);
+	glDeleteTextures(1, &specularTextureID);
 	glDeleteVertexArrays(1, &vertexArrayID);
 
 	delete text;
