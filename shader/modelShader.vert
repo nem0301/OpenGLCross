@@ -35,9 +35,9 @@ void main(){
 
 	UV = vertexUV;
 
-    vec3 vertexTangentCameraSpace = MV3x3 * vertexTangentModelSpace;
-    vec3 vertexBitangentCameraSpace = MV3x3 * vertexBitangentModelSpace;
-    vec3 vertexNormalCameraSpace = MV3x3 * vertexNormalModelSpace;
+    vec3 vertexNormalCameraSpace = MV3x3 * normalize(vertexNormalModelSpace);
+    vec3 vertexTangentCameraSpace = MV3x3 * normalize(vertexTangentModelSpace);
+    vec3 vertexBitangentCameraSpace = MV3x3 * normalize(vertexBitangentModelSpace);
 
     mat3 TBN = transpose(mat3(
             vertexTangentCameraSpace,

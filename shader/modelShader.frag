@@ -28,6 +28,9 @@ void main()
 	vec3 materialAmbientColor = vec3(0.1, 0.1, 0.1) * materialDiffuseColor;
 	vec3 materialSpecularColor = texture(specularTextureSampler, UV).rgb * 0.3;
 
+    eyeDirectionCameraSpace;
+    lightDirectionCameraSpace;
+
     vec3 textureNormalTangentSpace = normalize(texture(normalTextureSampler, 
         vec2(UV.x,-UV.y)).rgb * 2.0 - 1.0);
 

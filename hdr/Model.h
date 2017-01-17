@@ -397,6 +397,11 @@ public:
 //			uvs,
 //			normals);
 
+
+        vertices.clear();
+        uvs.clear();
+        normals.clear();
+
 		indexVBOTBN(
 			tmpVertices,
 			tmpUvs,
@@ -451,7 +456,8 @@ public:
 		mat4 mvp = proj * view * model;
 		mat4 view = this->view;
 		mat4 model = this->model;
-        mat4 mv = view * model;
+
+        mat4 mv = this->view * this->model;
         mat3 mv33 = mat3(mv);
 		
 		
