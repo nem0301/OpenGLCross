@@ -434,17 +434,17 @@ public:
 
 		glGenBuffers(1, &tangentBufferID);
 		glBindBuffer(GL_ARRAY_BUFFER, tangentBufferID);
-		glBufferData(GL_ARRAY_BUFFER, tangents.size() * sizeof(vec2),
+		glBufferData(GL_ARRAY_BUFFER, tangents.size() * sizeof(vec3),
 				&tangents[0], GL_STATIC_DRAW);
 
 		glGenBuffers(1, &bitangentBufferID);
 		glBindBuffer(GL_ARRAY_BUFFER, bitangentBufferID);
-		glBufferData(GL_ARRAY_BUFFER, bitangents.size() * sizeof(vec2),
+		glBufferData(GL_ARRAY_BUFFER, bitangents.size() * sizeof(vec3),
 				&bitangents[0], GL_STATIC_DRAW);
 	
 		glGenBuffers(1, &elementBufferID);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBufferID);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short),
 				&indices[0], GL_STATIC_DRAW);
 	}
 
@@ -527,7 +527,7 @@ public:
 
         // tangent buffer
 		glEnableVertexAttribArray(3);
-		glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, tangentBufferID);
 		glVertexAttribPointer(
 			3,          // attribute 1. uv
 			3,          // size
@@ -539,7 +539,7 @@ public:
 
         // bitangent buffer
 		glEnableVertexAttribArray(4);
-		glBindBuffer(GL_ARRAY_BUFFER, uvBufferID);
+		glBindBuffer(GL_ARRAY_BUFFER, bitangentBufferID);
 		glVertexAttribPointer(
 			4,          // attribute 1. uv
 			3,          // size

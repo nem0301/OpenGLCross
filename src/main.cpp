@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
 
 	// enable depth test
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 
 	// accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
