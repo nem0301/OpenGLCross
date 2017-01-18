@@ -7,62 +7,12 @@
 #include "Model.h"
 #include "Text2D.h"
 
+GLFWwindow* window;
 
-using namespace std;
-using namespace glm;
-
-int fpsCounter()
+int fpsCounter();
+int initGL(int width, int height);
+void initAttributes()
 {
-	static float oldTime = glfwGetTime();
-	static int frames = 0;
-
-	float curTime = glfwGetTime();
-
-	frames++;
-	if (curTime - oldTime > 1.0)
-	{
-		int ret = frames;
-		frames = 0;
-		oldTime += 1.0;
-		return ret;
-	}
-	return -1;
-}
-
-int main(int argc, char *argv[])
-{
-	if ( !glfwInit() )
-	{
-		return -1;
-	}
-
-	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // We want OpenGL 3.3
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL
-
-	// Open a window and create its OpenGL context
-	//int width = 2560;
-	//int height = 1440;
-	int width = 1600;
-	int height = 900;
-	GLFWwindow* window;
-	//window = glfwCreateWindow(width, height, "opengl", glfwGetPrimaryMonitor(), NULL);
-	window = glfwCreateWindow(width, height, "opengl", NULL, NULL);
-	if( window == NULL ){
-		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
-		glfwTerminate();
-		return -1;
-	}
-
-	glfwMakeContextCurrent(window); // Initialize GLEW
-	glewExperimental=GL_TRUE; // Needed in core profile
-	if (glewInit() != GLEW_OK) {
-		fprintf(stderr, "Failed to initialize GLEW\n");	
-		return -1;
-	}
-
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -75,7 +25,19 @@ int main(int argc, char *argv[])
 
 	// accept fragment if it closer to the camera than the former one
 	glDepthFunc(GL_LESS);
+}
 
+int main(int argc, char *argv[])
+{
+	int width = 1600;
+	int height = 900;
+
+	if (initGL(width, height) < 0)
+	{
+		return -1;
+	}
+	
+	initAttributes();
 
 	//vertext Array
 	GLuint vertexArrayID;
@@ -165,5 +127,53 @@ int main(int argc, char *argv[])
 	delete text;
 	glfwTerminate();
 
+	return 0;
+}
+
+int fpsCounter()
+{
+	static float oldTime = glfwGetTime();
+	static int frames = 0;
+
+	float curTime = glfwGetTime();
+
+	frames++;
+	if (curTime - oldTime > 1.0)
+	{
+		int ret = frames;
+		frames = 0;
+		oldTime += 1.0;
+		return ret;
+	}
+	return -1;
+}
+
+int initGL(int width, int height)
+{
+	if ( !glfwInit() )
+	{
+		return -1;
+	}
+
+	glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // We want OpenGL 3.3
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL
+
+	//window = glfwCreateWindow(width, height, "opengl", glfwGetPrimaryMonitor(), NULL);
+	window = glfwCreateWindow(width, height, "opengl", NULL, NULL);
+	if( window == NULL ){
+		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
+		glfwTerminate();
+		return -1;
+	}
+
+	glfwMakeContextCurrent(window); // Initialize GLEW
+	glewExperimental=GL_TRUE; // Needed in core profile
+	if (glewInit() != GLEW_OK) {
+		fprintf(stderr, "Failed to initialize GLEW\n");	
+		return -1;
+	}
 	return 0;
 }
