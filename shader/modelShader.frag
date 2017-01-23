@@ -9,7 +9,7 @@ in vec3 lightDirectionTangentSpace;
 in vec3 eyeDirectionTangentSpace;
 
 // Ouput data
-out vec3 color;
+layout(location = 0) out vec3 color;
 
 uniform sampler2D diffuseTextureSampler;
 uniform sampler2D normalTextureSampler;

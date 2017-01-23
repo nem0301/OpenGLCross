@@ -9,7 +9,7 @@
 GLFWwindow* window;
 
 int fpsCounter();
-int initGL(int width, int height);
+int initGL(int &width, int &height);
 void initAttributes();
 
 int main(int argc, char *argv[])
@@ -118,12 +118,77 @@ int main(int argc, char *argv[])
 	GLuint lightID = glGetUniformLocation(shaderID, "lightPositionWorldSpace");
 
 	string fpsText = "0";
-	Control* control = new Control (window, width, height, vec3(0, 0 ,5), 
+	// for control width and hight
+	int w = 1600;
+	int h = 900;
+	Control* control = new Control (window, w, h, vec3(0, 0 ,5), 
 			3.14f, 0.0f, 45.0f, 1.0f, 0.005f);
 
 	Text2D* text = new Text2D();
 	text->initText2D("./res/Holstein.DDS", "./shader/textShader.vert", "./shader/textShader.frag");
+
+
+	// render to texture
+	GLuint frameBufferID = 0;
+	glGenFramebuffers(1, &frameBufferID);
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
+
+	GLuint renderedTextureID;
+	glGenTextures(1, &renderedTextureID);
+	glBindTexture(GL_TEXTURE_2D, renderedTextureID);
+	
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, 0);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	GLuint depthRenderBufferID;
+	glGenRenderbuffers(1, &depthRenderBufferID);
+	glBindRenderbuffer(GL_RENDERBUFFER, depthRenderBufferID);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthRenderBufferID);
+
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, renderedTextureID, 0);
+	
+	GLenum drawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+	glDrawBuffers(1, drawBuffers);
+
+	if ( glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		return false;
+	}	
+
+	// draw simple quad
+	GLuint quadVertexArrayID;
+	glGenVertexArrays(1, &quadVertexArrayID);
+	glBindVertexArray(quadVertexArrayID);
+
+	static const GLfloat quadVertexBufferData[] = {
+		-1.0f, -1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		-1.0f,  1.0f, 0.0f,
+		1.0f, -1.0f, 0.0f,
+		1.0f,  1.0f, 0.0f,
+	};
+	
+	GLuint quadVertexBufferID;
+	glGenBuffers(1, &quadVertexBufferID);
+	glBindBuffer(GL_ARRAY_BUFFER, quadVertexBufferID);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertexBufferData), 
+		quadVertexBufferData, GL_STATIC_DRAW);
+
+	GLuint quadShaderID = loadShaders(
+			"./shader/passThrough.vert",
+			"./shader/passThrough.frag");
+	GLuint texID = glGetUniformLocation(quadShaderID, "renderedTexture");
+	GLuint timeID = glGetUniformLocation(quadShaderID, "time");
+	
+
 	do{
+		glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
+		glViewport(0, 0, width, height);
+		
 		//fps
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -203,6 +268,43 @@ int main(int argc, char *argv[])
 		}
 		text->printText(fpsText.c_str(), 0, 0, 30);
 
+		// Render to the screen
+		glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+		// Render on the whole framebuffer, complete from the lower left corner to the upper right
+		glViewport(0, 0, width, height);
+
+		// Clear the screen
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		// Use our shader
+		glUseProgram(quadShaderID);
+
+		// Bind our texture in Texture Unit 0
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, renderedTextureID);
+		// Set our "renderedTexture" sampler to user Texture Unit 0
+		glUniform1i(texID, 0); 
+
+		glUniform1f(timeID, (float)(glfwGetTime()*10.0f) );
+
+		// 1rst attribute buffer : vertices
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, quadVertexBufferID);
+		glVertexAttribPointer(
+				0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+				3,                  // size
+				GL_FLOAT,           // type
+				GL_FALSE,           // normalized?
+				0,                  // stride
+				(void*)0            // array buffer offset
+				);  
+
+		// Draw the triangles !
+		glDrawArrays(GL_TRIANGLES, 0, 6); // 2*3 indices starting at 0 -> 2 triangles
+
+		glDisableVertexAttribArray(0);
+
+
 		// Swap buffers
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -234,7 +336,7 @@ int fpsCounter()
 	return -1;
 }
 
-int initGL(int width, int height)
+int initGL(int &width, int &height)
 {
 	if ( !glfwInit() )
 	{
@@ -256,6 +358,9 @@ int initGL(int width, int height)
 	}
 
 	glfwMakeContextCurrent(window); // Initialize GLEW
+
+	glfwGetFramebufferSize(window, &width, &height);
+
 	glewExperimental=GL_TRUE; // Needed in core profile
 	if (glewInit() != GLEW_OK) {
 		fprintf(stderr, "Failed to initialize GLEW\n");	
