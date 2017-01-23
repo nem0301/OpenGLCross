@@ -1,9 +1,6 @@
 #include "Common.h"
 #include "GLCommon.h"
 
-using namespace std;
-using namespace glm;
-
 class Control
 {
 	GLFWwindow* window;
@@ -37,9 +34,10 @@ public:
 		this->my = height/2;
 	}
 	
-	void computeMVPByInputs(float curTime)
+	void computeMVPByInputs()
 	{
 		static float lastTime = glfwGetTime();
+		float curTime = glfwGetTime();
 		float deltaTime = (curTime - lastTime);
 		lastTime = curTime;
 
@@ -88,10 +86,12 @@ public:
 		{
 			position += vec3(0.0f, 1.0f, 0.0f) * deltaTime * speed;
 		}
+		/*
 		else if ( position[1] > 0 )
 		{
 			position -= vec3(0.0f, 1.0f, 0.0f) * deltaTime * speed * 0.2f;
 		}
+		*/
 
 
 		proj = perspective(fov, (float)width/(float)height, 0.1f, 100.f);

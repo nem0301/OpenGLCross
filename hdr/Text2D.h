@@ -30,11 +30,11 @@ public:
 		const char* vertexShader,
 		const char* fragmentShader)
 	{
-		textureID = Texture::loadDds(texturePath);
+		textureID = loadDDS(texturePath);
 		glGenBuffers(1, &vertexBufferID);
 		glGenBuffers(1, &uvBufferID);
 
-		shaderID = Shader::loadShaders(vertexShader, fragmentShader);
+		shaderID = loadShaders(vertexShader, fragmentShader);
 		uniformID = glGetUniformLocation(shaderID, "myTextureSampler");
 	}
 
