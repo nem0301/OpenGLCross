@@ -12,6 +12,26 @@ change cmake_install.cmake file's prefix
 sudo make install
 
 
+for Win64
+sudo apt-get install mingw-w64-x86-64-dev
+sudo apt-get install mingw-w64
+sudo apt-get install mingw-w64-tools
+PREFIX=/usr/x86_64-w64-mingw32/
+TOOLSET=x86_64-w64-mingw32
+CROSSPATH=/usr/x86_64-w64-mingw32
+make SYSTEM=linux-mingw64 \
+	CC=${TOOLSET}-gcc \
+	LD=${TOOLSET}-ld \
+	LDFLAGS.EXTRA=-L${CROSSPATH}/lib \
+	GLEW_PREFIX=${CROSSPATH} \
+	GLEW_DEST=${CROSSPATH}
+sudo make SYSTEM=linux-mingw64 \
+	CC=${TOOLSET}-gcc \
+	LD=${TOOLSET}-ld \
+	LDFLAGS.EXTRA=-L${CROSSPATH}/lib \
+	GLEW_PREFIX=${CROSSPATH} \
+	GLEW_DEST=${CROSSPATH} install
+
 
 for OSX
 brew install glew
