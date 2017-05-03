@@ -1,39 +1,51 @@
-
+OpenGL basic settings for Win64
 
 GLM:
-glm only need header file
-cp glm to include directory 
+	glm only need header file
+	cp glm to include directory 
 
 
 GLFW 3.2.1:
-cmake -DCMAKE_TOOLCHAIN_FILE=CMake/x86_64-w64-mingw32.cmake .
-make -j4
-change cmake_install.cmake file's prefix 
-sudo make install
+	cmake -DCMAKE_TOOLCHAIN_FILE=CMake/x86_64-w64-mingw32.cmake .
+	make -j4
+	change cmake_install.cmake file's prefix 
+	sudo make install
 
 
-for Win64
-sudo apt-get install mingw-w64-x86-64-dev
-sudo apt-get install mingw-w64
-sudo apt-get install mingw-w64-tools
-PREFIX=/usr/x86_64-w64-mingw32/
-TOOLSET=x86_64-w64-mingw32
-CROSSPATH=/usr/x86_64-w64-mingw32
-make SYSTEM=linux-mingw64 \
-	CC=${TOOLSET}-gcc \
-	LD=${TOOLSET}-ld \
-	LDFLAGS.EXTRA=-L${CROSSPATH}/lib \
-	GLEW_PREFIX=${CROSSPATH} \
-	GLEW_DEST=${CROSSPATH}
-sudo make SYSTEM=linux-mingw64 \
-	CC=${TOOLSET}-gcc \
-	LD=${TOOLSET}-ld \
-	LDFLAGS.EXTRA=-L${CROSSPATH}/lib \
-	GLEW_PREFIX=${CROSSPATH} \
-	GLEW_DEST=${CROSSPATH} install
+GLEW
+	sudo apt-get install mingw-w64-x86-64-dev
+	sudo apt-get install mingw-w64
+	sudo apt-get install mingw-w64-tools
+	PREFIX=/usr/x86_64-w64-mingw32/
+	TOOLSET=x86_64-w64-mingw32
+	CROSSPATH=/usr/x86_64-w64-mingw32
+	make SYSTEM=linux-mingw64 \
+		CC=${TOOLSET}-gcc \
+		LD=${TOOLSET}-ld \
+		LDFLAGS.EXTRA=-L${CROSSPATH}/lib \
+		GLEW_PREFIX=${CROSSPATH} \
+		GLEW_DEST=${CROSSPATH}
+	sudo make SYSTEM=linux-mingw64 \
+		CC=${TOOLSET}-gcc \
+		LD=${TOOLSET}-ld \
+		LDFLAGS.EXTRA=-L${CROSSPATH}/lib \
+		GLEW_PREFIX=${CROSSPATH} \
+		GLEW_DEST=${CROSSPATH} install
 
 
-for OSX
-brew install glew
-brew install glfw
-brew install glm
+OpenGL basic settings for Win64
+	brew install glew
+	brew install glfw
+	brew install glm
+
+
+glsl syntax highlighting
+	mkdir -p ~/.vim/autoload ~/.vim/bundle
+	curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+
+	add execute pathogen#infect() in .vimrc
+
+	cd ~/.vim/bundle
+	git clone https://github.com/tikhomirov/vim-glsl
+
+

@@ -38,9 +38,9 @@ int main(int argc, char *argv[])
 	GLuint modelMatrixID = glGetUniformLocation(shaderID, "M");
 	GLuint mv33MatrixID = glGetUniformLocation(shaderID, "MV3x3");
 
-	GLuint diffuseTexture = loadDDS("./res/diffuse.DDS");
-	GLuint normalTexture = loadBMP("./res/normal.bmp");
-	GLuint specularTexture = loadDDS("./res/specular.DDS");
+	GLuint diffuseTexture = loadDDS("./res/uvmap.DDS");
+	GLuint normalTexture; //= loadBMP("./res/normal.bmp");
+	GLuint specularTexture;// = loadDDS("./res/Holstein.DDS");
 
 	GLuint diffuseTextureID = glGetUniformLocation(shaderID, "diffuseTextureSampler");
 	GLuint normalTextureID = glGetUniformLocation(shaderID, "normalTextureSampler");
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 	vector<vec3> normals;
 
 	// load object
-	loadOBJ("./res/cylinder.obj", vertices, uvs, normals);
+	loadOBJ("./res/cube.obj", vertices, uvs, normals);
 
 	vector<vec3> tangents;
 	vector<vec3> bitangents;
