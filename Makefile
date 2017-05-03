@@ -33,16 +33,20 @@ CXX = $(WIN_CXX)
 LD = $(WIN_LD)
 
 
-all : $(TARGET) 
-#	glslangValidator shader/*
+all : $(TARGET) glslvalid
 	@cp -r ./shader ./tgt
 	@cp -r ./res ./tgt
+	@cd tgt && rm -f app.tgz && tar zcf app.tgz * 
+	@./put.sh
 
 $(TARGET) : $(OBJS)
 	$(LD) -o $@ $^ $(LIBS) 
 
 $(OBJS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp 
 	$(CXX) $(CFLAGS) $(INCLUDES)  -MMD -o $@ -c $<
+
+glslvalid:
+	@glslangValidator shader/*
 
 
 .PHONY : clean

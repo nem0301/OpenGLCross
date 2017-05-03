@@ -1,7 +1,7 @@
 
 
 GLM:
-glm just need header file
+glm only need header file
 cp glm to include directory 
 
 
