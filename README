@@ -47,5 +47,8 @@ glsl syntax highlighting
 
 	cd ~/.vim/bundle
 	git clone https://github.com/tikhomirov/vim-glsl
+	
+FreeType2 example
+	https://learnopengl.com/#!In-Practice/Text-Rendering
 
 
